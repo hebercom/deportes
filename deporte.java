@@ -1,23 +1,26 @@
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
-
+import java.util.Random;
 public class deporte {
     private Scanner nagj = new Scanner(System.in);
-    private String[] pelotas = {"fútbol", "baloncesto", "voley", "tenis"};
+    private String[] pelotas = {"fútbol:$50.00", "baloncesto:$60.00", "voley:$40.00", "tenis:$30.00"};
+
     private double[] precioPelotas = {50.00, 60.00, 40.00, 30.00};
 
-    private String[] camisetas = {"camiseta de fútbol", "camiseta de baloncesto", "camiseta de voley", "camiseta de tenis"};
+    private String[] camisetas = {"camiseta de fútbol:$70.00"
+            , "camiseta de baloncesto:$80.00", "camiseta de voley:$60.00", "camiseta de tenis:$50.00"};
     private double[] precioCamisetas = {70.00, 80.00, 60.00, 50.00};
 
-    private String[] zapatillas = {"zapatillas de fútbol", "zapatillas de baloncesto", "zapatillas de voley", "zapatillas de tenis"};
+    private String[] zapatillas = {"zapatillas de fútbol:$150.00", "zapatillas de baloncesto:$140.00"
+            , "zapatillas de voley:$130.00", "zapatillas de tenis:$120.00"};
     private double[] precioZapatillas = {150.00, 140.00, 130.00, 120.00};
 
-    private String[] equipos = {"guantes de portero", "red de voleibol", "raqueta de tenis", "balón de baloncesto"};
+    private String[] equipos = {"guantes de portero:$40.00", "red de voleibol:$100.00"
+            , "raqueta de tenis:$150.00", "balón de baloncesto:$60.00"};
     private double[] precioEquipos = {40.00, 100.00, 150.00, 60.00};
 
     private int[] carritoPelotas = new int[pelotas.length];
@@ -47,7 +50,7 @@ public class deporte {
 
     private void iniciarSesion() {
         String[] credenciales = {"heber", "2003", "54321"};
-        System.out.println("*** SPORT PUMA ***");
+        System.out.println("* SPORT PUMA *");
         System.out.println("Ingrese su usuario:");
         String usuario = nagj.nextLine();
         System.out.println("Ingrese su contraseña:");
@@ -97,22 +100,22 @@ public class deporte {
     }
 
     private void comprarPelotas() {
-        System.out.println("** Pelotas ***");
+        System.out.println("* Pelotas **");
         seleccionarYComprar(pelotas, precioPelotas, carritoPelotas);
     }
 
     private void comprarCamisetas() {
-        System.out.println("** Camisetas ***");
+        System.out.println("* Camisetas **");
         seleccionarYComprar(camisetas, precioCamisetas, carritoCamisetas);
     }
 
     private void comprarZapatillas() {
-        System.out.println("** Zapatillas ***");
+        System.out.println("* Zapatillas **");
         seleccionarYComprar(zapatillas, precioZapatillas, carritoZapatillas);
     }
 
     private void comprarEquipos() {
-        System.out.println("** Equipos ***");
+        System.out.println("* Equipos **");
         seleccionarYComprar(equipos, precioEquipos, carritoEquipos);
     }
 
@@ -189,35 +192,40 @@ public class deporte {
 
     private void calcularPago(int[] carrito, double[] precios, String[] items) {
         double subtotal = 0;
-        for (int i = 0; i < carrito.length; i++) {
-            subtotal += carrito[i] * precios[i];
-        }
-        double igv = subtotal * 0.18;
-        double totalPagar = subtotal + igv;
+        double totalIGV = 0;
 
         System.out.println("---- BOLETA DE VENTA ---------");
         System.out.println("Nombre del Cliente: " );
         System.out.println("Fecha: " + new SimpleDateFormat("dd/MM/yyyy  HH:mm:ss").format(new Date()));
         System.out.println("Productos Comprados:");
+
         for (int i = 0; i < carrito.length; i++) {
             if (carrito[i] > 0) {
-                System.out.println(items[i] + " x " + carrito[i] + " = " + (carrito[i] * precios[i]));
+                double precioSinIGV = precios[i] / 1.18;
+                double igvPorProducto = carrito[i] * (precios[i] - precioSinIGV);
+                subtotal += carrito[i] * precioSinIGV;
+                totalIGV += igvPorProducto;
+                System.out.println(items[i] + " x " + carrito[i] + " = " + (carrito[i] * precios[i]) +
+                        " (IGV: " + igvPorProducto + ")");
             }
         }
+
+        double totalPagar = subtotal + totalIGV;
+
         System.out.println("SUBTOTAL: " + subtotal);
-        System.out.println("IGV: " + igv);
+        System.out.println("IGV: " + totalIGV);
         System.out.println("TOTAL: " + totalPagar);
         System.out.println("Método de Pago: " + metodoPago);
 
         if (metodoPago.equals("Tarjeta") && validarPagoTarjeta()) {
             System.out.println("Pago realizado con éxito con Tarjeta.");
-            exportarBoleta(subtotal, igv, totalPagar, metodoPago, items, carrito, 0);
+            exportarBoleta(subtotal, totalIGV, totalPagar, metodoPago, items, carrito, 0);
         } else if (metodoPago.equals("Efectivo")) {
             System.out.println("Ingrese la cantidad de efectivo recibido:");
             double efectivoRecibido = nagj.nextDouble();
             double cambio = efectivoRecibido - totalPagar;
             System.out.println("Cambio: " + cambio);
-            exportarBoleta(subtotal, igv, totalPagar, metodoPago, items, carrito, cambio);
+            exportarBoleta(subtotal, totalIGV, totalPagar, metodoPago, items, carrito, cambio);
         } else {
             System.out.println("Error en el pago con Tarjeta. Intente nuevamente.");
         }
@@ -228,7 +236,7 @@ public class deporte {
             File archivo = new File("D:\\boleta.txt");
             FileWriter escritor = new FileWriter(archivo);
             escritor.write("---- BOLETA DE VENTA ---------\n");
-            escritor.write("Nombre del Cliente: " );
+            escritor.write("Nombre del Cliente: "+nombreTitular );
             escritor.write("Fecha: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "\n");
             escritor.write("Productos Comprados:\n");
             for (int i = 0; i < carrito.length; i++) {
